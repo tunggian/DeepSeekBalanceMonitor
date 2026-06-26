@@ -1,5 +1,4 @@
 # Build
-*.exe
 *.dll
 *.pdb
 bin/
@@ -7,3 +6,8 @@ obj/
 *.user
 *.suo
 .vs/
+
+# 构建产物（保留根目录下的主程序以提供直接下载）
+# 通过 ! 语法排除特定 exe 使其加入版本控制
+!/DeepSeekBalanceMonitor.exe
+!/Tests.exe

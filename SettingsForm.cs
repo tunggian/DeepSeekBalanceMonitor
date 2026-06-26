@@ -11,6 +11,7 @@ namespace DeepSeekBalanceMonitor
         private readonly TextBox refreshBox = new TextBox();
         private readonly ToggleSwitch autoHideSwitch = new ToggleSwitch();
         private readonly ToggleSwitch topMostSwitch = new ToggleSwitch();
+        private readonly ToggleSwitch autoStartSwitch = new ToggleSwitch();
         private readonly Label validationHint = new Label();
         private readonly RoundedButton saveButton = new RoundedButton();
         private readonly IconToggleButton toggleKeyButton = new IconToggleButton();
@@ -35,6 +36,7 @@ namespace DeepSeekBalanceMonitor
                 RefreshMinutes = settings.RefreshMinutes,
                 AutoHide = settings.AutoHide,
                 AlwaysOnTop = settings.AlwaysOnTop,
+                AutoStart = settings.AutoStart,
                 ThemeMode = AppSettings.NormalizeThemeMode(settings.ThemeMode),
                 WindowX = settings.WindowX,
                 WindowY = settings.WindowY,
@@ -53,7 +55,7 @@ namespace DeepSeekBalanceMonitor
             AutoScaleDimensions = new SizeF(96F, 96F);
             FormBorderStyle = FormBorderStyle.None;
             StartPosition = FormStartPosition.CenterScreen;
-            ClientSize = DpiHelper.ScaleSize(new Size(464, 420));
+            ClientSize = DpiHelper.ScaleSize(new Size(464, 490));
             ShowInTaskbar = true;
             Icon = LoadAppIcon();
             BackColor = C_Bg;
@@ -287,6 +289,24 @@ namespace DeepSeekBalanceMonitor
 
             cardY += cardH + gap;
 
+            // 开机自启
+            AddCardRow("开机自启", cardY, labelW, () =>
+            {
+                autoStartSwitch.Checked = Settings.AutoStart;
+                return autoStartSwitch;
+            });
+            Controls.Add(new TextLabel
+            {
+                Text = "登录 Windows 时自动启动",
+                ForeColor = C_Sub,
+                Location = new Point(DpiHelper.Px(170), cardY),
+                Size = new Size(DpiHelper.Px(230), cardH),
+                TextAlign = ContentAlignment.MiddleLeft,
+                Tag = "sub"
+            });
+
+            cardY += cardH + gap;
+
             // 主题
             AddCardRow("主题", cardY, labelW, () =>
             {
@@ -383,6 +403,7 @@ namespace DeepSeekBalanceMonitor
                 RefreshMinutes = AppSettings.NormalizeRefreshMinutes(m),
                 AutoHide = autoHideSwitch.Checked,
                 AlwaysOnTop = topMostSwitch.Checked,
+                AutoStart = autoStartSwitch.Checked,
                 ThemeMode = themeControl.Value,
                 WindowX = Settings.WindowX,
                 WindowY = Settings.WindowY,

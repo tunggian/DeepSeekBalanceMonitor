@@ -181,7 +181,7 @@ namespace DeepSeekBalanceMonitor
     {
         public static Rectangle Place(Rectangle screenBounds, Rectangle workingArea, Size size)
         {
-            int reserveRight = 140;
+            int reserveRight = DpiHelper.Px(140);
             if (workingArea.Bottom < screenBounds.Bottom)
             {
                 int taskbarHeight = screenBounds.Bottom - workingArea.Bottom;
@@ -256,6 +256,7 @@ namespace DeepSeekBalanceMonitor
             DockSide = "Right";
             AutoHide = true;
             AlwaysOnTop = true;
+            AutoStart = false;
             ThemeMode = "System";
         }
 
@@ -278,6 +279,7 @@ namespace DeepSeekBalanceMonitor
         // 行为设置
         public bool AutoHide { get; set; }
         public bool AlwaysOnTop { get; set; }
+        public bool AutoStart { get; set; }
         public string ThemeMode { get; set; }
 
         // --------------------------------------------------------
@@ -362,7 +364,12 @@ namespace DeepSeekBalanceMonitor
                         break;
 
                     case "api_key":
-                        settings.ApiKey = NormalizeApiKey(Unprotect(value));
+                        {
+                            string decoded = Unprotect(value);
+                            // null 表示解密失败（区别于空字符串=没有 Key）
+                            if (decoded != null)
+                                settings.ApiKey = NormalizeApiKey(decoded);
+                        }
                         break;
 
                     case "window_x":
@@ -393,6 +400,9 @@ namespace DeepSeekBalanceMonitor
                     case "always_on_top":
                         { bool v; if (bool.TryParse(value, out v)) settings.AlwaysOnTop = v; }
                         break;
+                    case "auto_start":
+                        { bool v; if (bool.TryParse(value, out v)) settings.AutoStart = v; }
+                        break;
                     case "theme_mode":
                         settings.ThemeMode = NormalizeThemeMode(value);
                         break;
@@ -402,7 +412,8 @@ namespace DeepSeekBalanceMonitor
             return settings;
         }
 
-        public void Save()
+        /// <summary>保存设置。返回 true 表示成功，false 表示写入失败。</summary>
+        public bool Save()
         {
             try
             {
@@ -420,13 +431,15 @@ namespace DeepSeekBalanceMonitor
                     "auto_hide_hint_shown=" + AutoHideHintShown,
                     "auto_hide=" + AutoHide,
                     "always_on_top=" + AlwaysOnTop,
+                    "auto_start=" + AutoStart,
                     "theme_mode=" + NormalizeThemeMode(ThemeMode),
                 });
+                return true;
             }
             catch (Exception ex)
             {
-                // 保存失败不应影响主流程，安静跳过
-                System.Diagnostics.Debug.WriteLine("Failed to save settings: " + ex.Message);
+                System.Diagnostics.Trace.WriteLine("DeepSeekBalanceMonitor: 保存设置失败: " + ex.Message);
+                return false;
             }
         }
 
@@ -449,9 +462,42 @@ namespace DeepSeekBalanceMonitor
                 return Encoding.UTF8.GetString(
                     ProtectedData.Unprotect(encrypted, null, DataProtectionScope.CurrentUser));
             }
+            catch (CryptographicException)
+            {
+                // DPAPI 解密失败（用户配置迁移、凭据变更等）
+                System.Diagnostics.Trace.WriteLine("DeepSeekBalanceMonitor: API Key 解密失败。");
+                return null; // null=出错，""=无 Key
+            }
+            catch (FormatException)
+            {
+                return null;
+            }
+        }
+
+        // --------------------------------------------------------
+        //  开机自启（注册表 Run 键）
+        // --------------------------------------------------------
+
+        private static readonly string AutoStartKeyPath =
+            @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
+
+        public static void ApplyAutoStart(bool enable)
+        {
+            try
+            {
+                using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+                    AutoStartKeyPath, true))
+                {
+                    if (key == null) return;
+                    if (enable)
+                        key.SetValue("DeepSeekBalanceMonitor", System.Windows.Forms.Application.ExecutablePath);
+                    else
+                        key.DeleteValue("DeepSeekBalanceMonitor", false);
+                }
+            }
             catch
             {
-                return "";
+                // 注册表写入失败不阻塞主流程
             }
         }
     }
@@ -469,10 +515,15 @@ namespace DeepSeekBalanceMonitor
         private const string BalanceUrl = "https://api.deepseek.com/user/balance";
 
         // 单例 HttpClient —— 连接复用、套接字不耗尽
-        private static readonly HttpClient Http = new HttpClient
+        private static readonly HttpClient Http;
+
+        static DeepSeekBalanceClient()
         {
-            Timeout = TimeSpan.FromSeconds(30),
-        };
+            Http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+            // DNS 每 5 分钟重新解析，响应 API 端点 IP 变更
+            var sp = ServicePointManager.FindServicePoint(new Uri(BalanceUrl));
+            sp.ConnectionLeaseTimeout = 5 * 60 * 1000;
+        }
 
         public async Task<BalanceSnapshot> GetBalanceAsync(string apiKey, CancellationToken ct = default(CancellationToken))
         {

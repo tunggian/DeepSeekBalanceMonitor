@@ -24,6 +24,7 @@ namespace DeepSeekBalanceMonitor
 
         private bool dragging;
         private Point dragStart;
+        private AppSettings cachedSettings;
 
         private readonly Timer edgeTimer = new Timer();
         private EdgeSide dockSide = EdgeSide.Right;
@@ -74,6 +75,12 @@ namespace DeepSeekBalanceMonitor
             edgeTimer.Interval = 150;
             edgeTimer.Tick += CheckAutoHide;
             edgeTimer.Start();
+        }
+
+        /// <summary>注入已加载的设置，避免 RestoreBounds 重复读磁盘。</summary>
+        public void SetCachedSettings(AppSettings settings)
+        {
+            cachedSettings = settings;
         }
 
         public void ApplySettings(AppSettings settings)
@@ -451,7 +458,7 @@ namespace DeepSeekBalanceMonitor
         private new void RestoreBounds()
         {
             var screen = Screen.FromControl(this).WorkingArea;
-            var settings = AppSettings.Load();
+            var settings = cachedSettings ?? AppSettings.Load();
             ApplySettings(settings);
 
             EdgeSide saved;

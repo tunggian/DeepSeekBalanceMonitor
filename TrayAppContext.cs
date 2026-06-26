@@ -35,6 +35,7 @@ namespace DeepSeekBalanceMonitor
             // ---- 浮窗 ----
             balanceForm = new FloatingBalanceForm();
             // ponytail: 无标题栏窗体，不需要设 Icon
+            balanceForm.SetCachedSettings(settings);
             balanceForm.AutoHideEnabled = settings.AutoHide;
             balanceForm.SettingsRequested += ShowSettings;
             balanceForm.RefreshRequested += OnRefreshRequested;
@@ -54,6 +55,9 @@ namespace DeepSeekBalanceMonitor
             refreshTimer = new System.Windows.Forms.Timer();
             refreshTimer.Tick += OnTimerTick;
             ApplyTimer();
+
+            // ---- 同步注册表自启状态（处理 exe 路径变更等） ----
+            AppSettings.ApplyAutoStart(settings.AutoStart);
 
             // ---- 首次运行引导 ----
             if (string.IsNullOrWhiteSpace(settings.ApiKey))
@@ -272,7 +276,10 @@ namespace DeepSeekBalanceMonitor
                 }
 
                 settings = form.Settings;
-                settings.Save();
+                if (!settings.Save())
+                    MessageBox.Show("设置保存失败，请检查磁盘空间或文件权限。", "保存错误",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                AppSettings.ApplyAutoStart(settings.AutoStart);
                 balanceForm.ApplySettings(settings);
                 ApplyTimer();
                 OnRefreshRequested();
@@ -289,11 +296,12 @@ namespace DeepSeekBalanceMonitor
             try
             {
                 balanceForm.PersistCurrentBounds(settings);
+                AppSettings.ApplyAutoStart(settings.AutoStart);
                 settings.Save();
             }
             catch
             {
-                // 退出时保存失败不阻塞
+                // 退出时保存失败不阻塞退出
             }
 
             refreshTimer.Stop();

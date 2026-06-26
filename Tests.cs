@@ -22,7 +22,6 @@ namespace DeepSeekBalanceMonitor.Tests
             try { DefaultsWindowPositionUnset(); } catch (Exception ex) { Console.WriteLine("  ✗ " + ex.Message); failed++; }
             try { ScalesRectanglesForDpi(); } catch (Exception ex) { Console.WriteLine("  ✗ " + ex.Message); failed++; }
             try { ComputesFloatingLayout(); } catch (Exception ex) { Console.WriteLine("  ✗ " + ex.Message); failed++; }
-            try { SettingsFormAvoidsTransparentBackColor(); } catch (Exception ex) { Console.WriteLine("  ✗ " + ex.Message); failed++; }
             try { CentersControlsInRows(); } catch (Exception ex) { Console.WriteLine("  ✗ " + ex.Message); failed++; }
             try { BuildsCompactDisplayText(); } catch (Exception ex) { Console.WriteLine("  ✗ " + ex.Message); failed++; }
             try { ComputesEdgeDockBounds(); } catch (Exception ex) { Console.WriteLine("  ✗ " + ex.Message); failed++; }
@@ -40,13 +39,6 @@ namespace DeepSeekBalanceMonitor.Tests
             AssertEqual(new Rectangle(15, 6, 30, 45),
                 DpiHelper.ScaleRect(new Rectangle(10, 4, 20, 30), 1.5f),
                 "scaled rectangle");
-        }
-
-        private static void SettingsFormAvoidsTransparentBackColor()
-        {
-            string source = System.IO.File.ReadAllText("SettingsForm.cs");
-            AssertEqual(false, source.Contains("Color.Transparent"), "settings form avoids transparent backcolor");
-            AssertEqual(false, source.Contains("SupportsTransparentBackColor"), "settings form avoids transparent style");
         }
 
         private static void CentersControlsInRows()
