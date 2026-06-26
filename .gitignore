@@ -1,0 +1,9 @@
+# Build
+*.exe
+*.dll
+*.pdb
+bin/
+obj/
+*.user
+*.suo
+.vs/
