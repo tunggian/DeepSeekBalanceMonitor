@@ -27,7 +27,7 @@ $refs = @(
   "/r:System.Net.Http.dll"
 )
 
-# ---- 通用源文件（UI + 业务逻辑） ----
+# ---- 源文件 ----
 $commonSources = @(
   "Core.cs",
   "NativeMethods.cs",
@@ -48,16 +48,4 @@ Run-Step $csc (@(
   "/out:DeepSeekBalanceMonitor.exe"
 ) + $refs + $commonSources)
 
-# ---- 构建测试 EXE ----
-Write-Host "`n>> 构建 Tests.exe ..." -ForegroundColor Yellow
-Run-Step $csc (@(
-  "/nologo",
-  "/target:exe",
-  "/out:Tests.exe"
-) + $refs + @("Core.cs", "Tests.cs"))
-
-# ---- 运行测试 ----
-Write-Host "`n>> 运行测试 ..." -ForegroundColor Yellow
-Run-Step ".\Tests.exe" @()
-
-Write-Host "`n✓ 全部完成" -ForegroundColor Green
+Write-Host "`n✓ 构建完成" -ForegroundColor Green
