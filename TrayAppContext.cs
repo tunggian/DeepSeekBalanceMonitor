@@ -62,7 +62,8 @@ namespace DeepSeekBalanceMonitor
             // ---- 首次运行引导 ----
             if (string.IsNullOrWhiteSpace(settings.ApiKey))
             {
-                // 先显示浮窗
+                // 先显示无 Key 状态，再显示浮窗
+                SetStatus("--", "DeepSeek 余额监控：请先配置 API Key", "--");
                 ShowBalanceWindow();
                 // 延迟一点弹出设置窗口，等 UI 稳定
                 refreshTimer.Tick += OnFirstRunGuide;
@@ -213,8 +214,7 @@ namespace DeepSeekBalanceMonitor
             catch (InvalidOperationException ex)
             {
                 // 用户可理解的业务错误（Key 无效、格式错误等）
-                SetStatus("ERR", "DeepSeek 余额：" + ex.Message,
-                    ex.Message.Split(new[] { '\n' }, 2)[0]);
+                SetStatus("ERR", "DeepSeek 余额：" + ex.Message, "ERR");
             }
             catch (Exception ex)
             {
@@ -282,7 +282,10 @@ namespace DeepSeekBalanceMonitor
                 AppSettings.ApplyAutoStart(settings.AutoStart);
                 balanceForm.ApplySettings(settings);
                 ApplyTimer();
-                OnRefreshRequested();
+                if (string.IsNullOrWhiteSpace(settings.ApiKey))
+                    SetStatus("--", "DeepSeek 余额监控：请先配置 API Key", "--");
+                else
+                    OnRefreshRequested();
             }
         }
 

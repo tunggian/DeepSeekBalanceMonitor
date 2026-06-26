@@ -507,22 +507,12 @@ namespace DeepSeekBalanceMonitor
         {
             public Color IconColor { get; set; }
             public int RotationStep { get; set; }
-            private Image iconImage;
 
             public RefreshIconControl()
             {
                 SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.SupportsTransparentBackColor, true);
                 BackColor = Color.Transparent;
                 IconColor = Color.FromArgb(0, 103, 192);
-                iconImage = LoadIconImage();
-            }
-
-            private static Image LoadIconImage()
-            {
-                string path = System.IO.Path.Combine(
-                    System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location),
-                    "refresh-icon.png");
-                return System.IO.File.Exists(path) ? Image.FromFile(path) : null;
             }
 
             protected override void OnPaint(PaintEventArgs e)
@@ -533,26 +523,14 @@ namespace DeepSeekBalanceMonitor
                 e.Graphics.RotateTransform(RotationStep * 45F);
                 e.Graphics.TranslateTransform(-w / 2F, -h / 2F);
 
-                if (iconImage != null)
+                float pw = Math.Max(1.5f, DpiHelper.Px(2));
+                int m = DpiHelper.Px(3);
+                int s = w - m * 2;
+                using (var pen = new Pen(IconColor, pw))
                 {
-                    int size = Math.Min(w, h);
-                    int pad = DpiHelper.Px(1);
-                    e.Graphics.DrawImage(iconImage,
-                        new Rectangle(pad, pad, size - pad * 2, size - pad * 2),
-                        new Rectangle(0, 0, iconImage.Width, iconImage.Height),
-                        GraphicsUnit.Pixel);
-                }
-                else
-                {
-                    // ponytail: fallback — 基本的圆弧箭头
-                    float pw = DpiHelper.Px(2);
-                    int m = DpiHelper.Px(3);
-                    int s = w - m * 2;
-                    using (var pen = new Pen(IconColor, pw))
-                    {
-                        pen.EndCap = System.Drawing.Drawing2D.LineCap.ArrowAnchor;
-                        e.Graphics.DrawArc(pen, m, m, s, s, 135, 270);
-                    }
+                    pen.StartCap = System.Drawing.Drawing2D.LineCap.Round;
+                    pen.EndCap = System.Drawing.Drawing2D.LineCap.ArrowAnchor;
+                    e.Graphics.DrawArc(pen, m, m, s, s, 135, 270);
                 }
             }
         }

@@ -108,12 +108,14 @@ namespace DeepSeekBalanceMonitor
 
         private static Icon LoadAppIcon()
         {
-            string icoPath = System.IO.Path.Combine(
-                System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location),
-                "AppIcon.ico");
-            if (System.IO.File.Exists(icoPath))
-                return new Icon(icoPath);
-            return null;
+            try
+            {
+                return System.Drawing.Icon.ExtractAssociatedIcon(typeof(Program).Assembly.Location);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         protected override void OnShown(EventArgs e)
