@@ -44,7 +44,6 @@ Run-Step $csc (@(
   "/nologo",
   "/target:winexe",
   "/optimize+",
-  "/win32icon:AppIcon.ico",
   "/out:DeepSeekBalanceMonitor.exe"
 ) + $refs + $commonSources)
 
