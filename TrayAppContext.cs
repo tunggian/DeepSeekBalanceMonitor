@@ -252,11 +252,10 @@ namespace DeepSeekBalanceMonitor
 
         private static Icon LoadAppIcon()
         {
-            string icoPath = System.IO.Path.Combine(
-                System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location),
-                "AppIcon.ico");
-            if (System.IO.File.Exists(icoPath))
-                return new Icon(icoPath);
+            // 从 EXE 自身提取嵌入式图标（/win32icon:AppIcon.ico），不需要独立 .ico 文件
+            var icon = Icon.ExtractAssociatedIcon(typeof(Program).Assembly.Location);
+            if (icon != null) return icon;
+            // ponytail: 极罕见失败时回退到自绘
             return IconPainter.Draw("DS");
         }
 

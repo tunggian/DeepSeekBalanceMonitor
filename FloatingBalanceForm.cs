@@ -237,9 +237,11 @@ namespace DeepSeekBalanceMonitor
 
         public void SetStatus(string value, string detail)
         {
-            balanceText = value ?? "--";
+            // 刷新中不改变余额大字，避免闪
+            if (detail != "刷新中" && detail != "正在同步")
+                balanceText = value ?? "--";
             UpdateStatusIndicator(detail);
-            Invalidate(); // 直接绘制，需要整体重绘
+            Invalidate();
         }
 
         private void UpdateStatusIndicator(string detail)
