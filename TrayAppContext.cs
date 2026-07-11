@@ -40,6 +40,7 @@ namespace DeepSeekBalanceMonitor
             balanceForm.SettingsRequested += ShowSettings;
             balanceForm.RefreshRequested += OnRefreshRequested;
             balanceForm.ExitRequested += ExitThread;
+            balanceForm.PositionChanged += SaveWindowPosition;
 
             // ---- 托盘图标 ----
             notifyIcon = new NotifyIcon
@@ -291,6 +292,12 @@ namespace DeepSeekBalanceMonitor
         // ============================================================
         //  Exit
         // ============================================================
+
+        private void SaveWindowPosition()
+        {
+            balanceForm.PersistCurrentBounds(settings);
+            settings.Save();
+        }
 
         protected override void ExitThreadCore()
         {

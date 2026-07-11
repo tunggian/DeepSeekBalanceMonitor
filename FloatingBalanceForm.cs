@@ -42,6 +42,7 @@ namespace DeepSeekBalanceMonitor
         public event Action SettingsRequested;
         public event Action RefreshRequested;
         public event Action ExitRequested;
+        public event Action PositionChanged;
 
         public FloatingBalanceForm()
         {
@@ -360,6 +361,7 @@ namespace DeepSeekBalanceMonitor
             dragging = false;
             Capture = false;
             SnapToNearestEdge();
+            if (PositionChanged != null) PositionChanged();
         }
 
         protected override void OnMouseCaptureChanged(EventArgs e)
@@ -370,6 +372,7 @@ namespace DeepSeekBalanceMonitor
                 // 鼠标捕获被外部释放（如系统对话框），结束拖拽
                 dragging = false;
                 SnapToNearestEdge();
+                if (PositionChanged != null) PositionChanged();
             }
         }
 
